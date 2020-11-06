@@ -9,7 +9,7 @@ useradd $username
 usermod -aG sudo $username 
 
 sudo apt update
-sudo apt upgrade
+sudo apt upgrade -y 
 sudo apt install zip apache2 mariadb-server libapache2-mod-php7.4 -y
 sudo apt install php7.4-gd php7.4-mysql php7.4-curl php7.4-mbstring php7.4-intl -y
 sudo apt install php7.4-gmp php7.4-bcmath php-imagick php7.4-xml php7.4-zip -y
@@ -22,19 +22,30 @@ echo "CREATE USER '$user_db'@'localhost' IDENTIFIED BY '$clave_db';CREATE DATABA
 wget https://download.nextcloud.com/server/releases/nextcloud-20.0.0.zip
 unzip nextcloud*
 cp -r nextcloud/* /var/www/html/
-echo 'Alias / "/var/www/html/"
+echo "<VirtualHost *:80>
+  DocumentRoot /var/www/html/
+  ServerName  www.$domain
 
-<Directory /var/www/html/>
-  Require all granted
-  AllowOverride All
-  Options FollowSymLinks MultiViews
+  <Directory /var/www/html/>
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
 
-   <IfModule mod_dav.c>
-	Dav off
+    <IfModule mod_dav.c>
+      Dav off
     </IfModule>
-</Directory>' > /etc/apache2/sites-available/nextcloud.conf
+  </Directory>
+</VirtualHost>"> /etc/apache2/sites-available/nextcloud.conf
 
 a2enmod ssl
+a2ensite nextcloud.conf
+a2dissite 000-default.conf
+a2enmod rewrite
+a2enmod headers
+a2enmod env
+a2enmod dir
+a2enmod mime
+service apache2 restart
 
 cd /var/www/html/
 
@@ -45,10 +56,16 @@ sudo -u www-data php occ  maintenance:install --database \
 	"$clave_db" --admin-user "$username" --admin-pass "$password"
 
 
-sed -i 's/#Port 22/Port $ssh_port/g' /etc/ssh/sshd_config 
-sed -i "s/0 =>\(.*\)/0 => \1 1 => \'$domain\' ," /var/www/html/config/config.php
 
+sed -i 's/#Port 22/Port $ssh_port/g' /etc/ssh/sshd_config 
+sed -i "s/0 =>\(.*\)/0 => \1 1 => \'www.$domain\' ,/" /var/www/html/config/config.php
+sed -i "s/'overwrite.cli.url' => 'http:\/\/localhost'/'overwrite.cli.url', => 'https:\/\/www.juanma-nextcloud.xyz',\n\t'htaccess.RewriteBase' => '\/',/" /var/www/html/config/config.php
+
+
+ufw allow 443
+ufw allow 80
 sudo snap install --classic certbot
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
 sudo certbot --apache
 service apache2 reload
+systemctl sshd restart
