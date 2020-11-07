@@ -5,8 +5,6 @@ read -p 'Clave_db:  ' clave_db
 read -p 'Change SSH port:   ' ssh_port
 read -p 'Ingresar dominio:  ' domain
 
-useradd $username
-usermod -aG sudo $username 
 
 sudo apt update
 sudo apt upgrade -y 
@@ -22,45 +20,49 @@ echo "CREATE USER '$user_db'@'localhost' IDENTIFIED BY '$clave_db';CREATE DATABA
 wget https://download.nextcloud.com/server/releases/nextcloud-20.0.0.zip
 unzip nextcloud*
 cp -r nextcloud/* /var/www/html/
-echo "<VirtualHost *:80>
-  DocumentRoot /var/www/html/
-  ServerName  www.$domain
 
-  <Directory /var/www/html/>
-    Require all granted
-    AllowOverride All
-    Options FollowSymLinks MultiViews
 
-    <IfModule mod_dav.c>
-      Dav off
-    </IfModule>
-  </Directory>
-</VirtualHost>"> /etc/apache2/sites-available/nextcloud.conf
+echo '
+Alias / "/var/www/html/"
+
+<Directory /var/www/html/>
+  Require all granted
+  AllowOverride All
+  Options FollowSymLinks MultiViews
+
+  <IfModule mod_dav.c>
+    Dav off
+  </IfModule>
+</Directory>'> /etc/apache2/sites-available/nextcloud.conf
 
 a2enmod ssl
 a2ensite nextcloud.conf
-a2dissite 000-default.conf
+#a2dissite 000-default.conf
 a2enmod rewrite
 a2enmod headers
 a2enmod env
 a2enmod dir
 a2enmod mime
+
+echo "ServerName www.$domain" >> /etc/apache2/apache2.conf
+
+
+service apache2 reload
 service apache2 restart
 
 cd /var/www/html/
 
 chown -R www-data:www-data /var/www/html/
 
-sudo -u www-data php occ  maintenance:install --database \
-	"mysql" --database-name "nextcloud"  --database-user "$user_db" --database-pass \
-	"$clave_db" --admin-user "$username" --admin-pass "$password"
+sudo -u www-data php occ  maintenance:install --database "mysql" --database-name "nextcloud"  --database-user "$user_db" --database-pass "$clave_db" --admin-user "$username" --admin-pass "$password"
 
 
 
 sed -i 's/#Port 22/Port $ssh_port/g' /etc/ssh/sshd_config 
-sed -i "s/0 =>\(.*\)/0 => \1 1 => \'www.$domain\' ,/" /var/www/html/config/config.php
-sed -i "s/'overwrite.cli.url' => 'http:\/\/localhost'/'overwrite.cli.url', => 'https:\/\/www.juanma-nextcloud.xyz',\n\t'htaccess.RewriteBase' => '\/',/" /var/www/html/config/config.php
+sed -i "s/0 =>\(.*\)/0 => \1 \n 1 => \'www.$domain\' ,/" /var/www/html/config/config.php
+sed -i "s/'overwrite.cli.url' => 'http:\/\/localhost'/'overwrite.cli.url' => 'https:\/\/www.$domain',\n\t'htaccess.RewriteBase' => '\/'/" /var/www/html/config/config.php
 
+cd /var/www/html && sudo -u www-data php /var/www/nextcloud/occ maintenance:update:htaccess
 
 ufw allow 443
 ufw allow 80
