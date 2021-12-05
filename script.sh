@@ -12,7 +12,7 @@ sudo apt install zip apache2 mariadb-server libapache2-mod-php7.4 -y
 sudo apt install php7.4-gd php7.4-mysql php7.4-curl php7.4-mbstring php7.4-intl -y
 sudo apt install php7.4-gmp php7.4-bcmath php-imagick php7.4-xml php7.4-zip -y
 
-sudo mysql -u $user_db -p$clave_db  
+sudo mysql -u $user_db -p $clave_db  
 
 echo "CREATE USER '$user_db'@'localhost' IDENTIFIED BY '$clave_db';CREATE DATABASE IF NOT EXISTS nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;GRANT ALL PRIVILEGES ON nextcloud.* TO '$user_db'@'localhost';FLUSH PRIVILEGES" | mysql
 
@@ -86,7 +86,7 @@ sudo -u www-data php occ  maintenance:install --database "mysql" --database-name
 
 
 
-sed -i 's/#Port 22/Port $ssh_port/g' /etc/ssh/sshd_config 
+sed -i 's/#Port 22/Port "$ssh_port"/g' /etc/ssh/sshd_config 
 sed -i "s/0 =>\(.*\)/0 => \1 \n 1 => \'www.$domain\' , \n 2 => \'$domain\' , /" /var/www/html/config/config.php
 sed -i "s/'overwrite.cli.url' => 'http:\/\/localhost'/'overwrite.cli.url' => 'https:\/\/www.$domain',\n\t'htaccess.RewriteBase' => '\/'/" /var/www/html/config/config.php
 
@@ -94,7 +94,7 @@ cd /var/www/html && sudo -u www-data php /var/www/html/occ maintenance:update:ht
 
 cd /var/www/html && sudo -u www-data php -d memory_limit=1024M occ app:install richdocumentscode
 
-rm /var/www/html/index.html 
+#rm /var/www/html/index.html 
 
 ufw allow 443
 ufw allow 80
