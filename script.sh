@@ -94,6 +94,7 @@ cd /var/www/html && sudo -u www-data php /var/www/html/occ maintenance:update:ht
 
 cd /var/www/html && sudo -u www-data php -d memory_limit=1024M occ app:install richdocumentscode
 
+rm /var/www/html/index.html 
 
 ufw allow 443
 ufw allow 80
