@@ -1,5 +1,5 @@
 read -p  'Usuario admin:  ' username
-read -p  'Clave admin:' password
+read -p  'Clave admin: ' password
 read -p 'Usuario db:  ' user_db
 read -p 'Clave_db:  ' clave_db
 read -p 'Change SSH port:   ' ssh_port
