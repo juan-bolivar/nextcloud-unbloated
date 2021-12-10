@@ -12,7 +12,6 @@ sudo apt install zip apache2 mariadb-server libapache2-mod-php7.4 -y
 sudo apt install php7.4-gd php7.4-mysql php7.4-curl php7.4-mbstring php7.4-intl -y
 sudo apt install php7.4-gmp php7.4-bcmath php-imagick php7.4-xml php7.4-zip -y
 
-sudo mysql -u $user_db -p $clave_db  
 
 echo "CREATE USER '$user_db'@'localhost' IDENTIFIED BY '$clave_db';CREATE DATABASE IF NOT EXISTS nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;GRANT ALL PRIVILEGES ON nextcloud.* TO '$user_db'@'localhost';FLUSH PRIVILEGES" | mysql
 
