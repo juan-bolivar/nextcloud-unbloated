@@ -82,11 +82,10 @@ cd /var/www/html/
 
 chown -R www-data:www-data /var/www/html/
 
-sudo -u www-data php occ  maintenance:install --database "mysql" --database-name "nextcloud"  --database-user "$user_db" --database-pass "$clave_db" --admin-user "$username" --admin-pass "$password"
+sudo -u www-data php occ  maintenance:install --database mysql --database-name nextcloud --database-user $user_db --database-pass $clave_db --admin-user $username --admin-pass $password
 
 
-
-sed -i 's/#Port 22/Port "$ssh_port"/g' /etc/ssh/sshd_config 
+sed -i 's/#Port 22/Port $ssh_port/g' /etc/ssh/sshd_config 
 sed -i "s/0 =>\(.*\)/0 => \1 \n 1 => \'www.$domain\' , \n 2 => \'$domain\' , /" /var/www/html/config/config.php
 sed -i "s/'overwrite.cli.url' => 'http:\/\/localhost'/'overwrite.cli.url' => 'https:\/\/www.$domain',\n\t'htaccess.RewriteBase' => '\/'/" /var/www/html/config/config.php
 
